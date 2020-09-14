@@ -1,5 +1,4 @@
 const express = require("express");
-const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -17,6 +16,7 @@ app.get("/", (req, res) => {
 
 require("./auth")(app);
 require("./files")(app);
+require("./database")();
 
 const port = 8000;
 app.listen(port, function () {
