@@ -1,4 +1,7 @@
+const {verifyToken} = require("./auth")
+
 module.exports = function (app) {
+    app.use("/file*", verifyToken)
 
     app.post("/file/upload", (req, res) => {
         res.send("test")
@@ -15,7 +18,7 @@ module.exports = function (app) {
     app.get("/file/download/:id", (req, res) => {
         res.send("test")
     });
-    app.get("/file/update/:id", (req, res) => {
+    app.put("/file/update/:id", (req, res) => {
         res.send("test")
     });
     

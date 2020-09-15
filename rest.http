@@ -1,0 +1,27 @@
+POST http://localhost:8000/signin
+Content-Type: application/json
+
+{
+    "id": "1005",
+    "password": "123"
+}
+
+###
+GET http://localhost:8000/info
+###
+
+POST http://localhost:8000/signin/new_token
+###
+
+
+GET  http://localhost:8000/logout
+###
+
+
+// ----------------------------------------------------
+
+
+GET http://localhost:8000/file/list
+###
+
+

@@ -1,5 +1,6 @@
 const express = require("express");
-
+const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const app = express();
 
 const cors = require('cors')
@@ -10,13 +11,13 @@ app.use(cors({
     "optionsSuccessStatus": 204
 }));
 
-app.get("/", (req, res) => {
-    res.send("test")
-});
+app.use(bodyParser.json())
+app.use(cookieParser());
 
-require("./src/auth")(app);
-require("./src/files")(app);
 require("./src/database")();
+require("./src/auth").init(app);
+require("./src/files")(app);
+
 
 const port = 8000;
 app.listen(port, function () {
