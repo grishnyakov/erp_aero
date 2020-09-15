@@ -14,9 +14,9 @@ app.get("/", (req, res) => {
     res.send("test")
 });
 
-require("./auth")(app);
-require("./files")(app);
-require("./database")();
+require("./src/auth")(app);
+require("./src/files")(app);
+require("./src/database")();
 
 const port = 8000;
 app.listen(port, function () {

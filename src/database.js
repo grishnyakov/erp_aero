@@ -6,7 +6,7 @@ const connection = mysql.createConnection({
     password: 'adminadmin',
     database: 'demo'
 });
-connection.connect();
+// connection.connect();
 
 
 module.exports = function () {
