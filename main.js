@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
+const path = require("path");
 const app = express();
 
 const cors = require('cors')
@@ -14,9 +15,13 @@ app.use(cors({
 app.use(bodyParser.json())
 app.use(cookieParser());
 
-require("./src/database")();
+require("./src/database");
 require("./src/auth").init(app);
 require("./src/files")(app);
+
+app.get("/", (req, res)=>{
+    res.sendFile("index.html",{ root: path.join(__dirname, 'public') })
+});
 
 
 const port = 8000;

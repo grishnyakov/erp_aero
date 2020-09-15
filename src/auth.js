@@ -1,18 +1,22 @@
 const jwt = require("jsonwebtoken");
 const users = require("./users");
 
-const ACCESS_SECRET = "aero-key";
-const REFRESH_SECRET = "e8n(*&^nfdnf6SAFMPQZMGVFJA"
+const ACCESS_SECRET = "b32b7%#_erp-aero-DD";
+const REFRESH_SECRET = "e8n(*&^nfdn_f6SA"
 
 
 function verifyToken (req, res, next) {
-    // нет требований по месту хранения токенов, поэтому буду в куках хранить
+
     if (!req.cookies.accessToken) res.sendStatus(403);
     else {
         jwt.verify(req.cookies.accessToken, ACCESS_SECRET, (err, authData) => {
-            if (err) res.sendStatus(403);
+            if (err) {
+                if (err.name === "TokenExpiredError") res.status(403).send(err.message); // TODO: автоматически продлевать
+                else res.sendStatus(403);
+            }
             else {
-                if (authData.user.id === null) res.sendStatus(403); // anonimus
+                if (authData.userID === null) res.sendStatus(403); // anonimus
+                else if (!users.isAuthorized(authData.userID)) res.sendStatus(403); // anonimus
                 else {
                     req.authData = authData;
                     next()
@@ -22,53 +26,63 @@ function verifyToken (req, res, next) {
     }
 }
 
-function getToken (user, type = "access",) {
+function getToken (userID, type = "access",) {
     const isRefreshToken = type === "refresh";
-    const options = {
-        user,
-        expiresIn: isRefreshToken ? "30 days" : "10m"
-    };
-    const token = isRefreshToken ? REFRESH_SECRET : ACCESS_SECRET;
+    const options = { expiresIn: isRefreshToken ? "30 days" : "30s" };
+    const secret = isRefreshToken ? REFRESH_SECRET : ACCESS_SECRET;
+
     return new Promise((resolve) => {
-        jwt.sign(options, token, (err, token) => {
+        jwt.sign({ userID }, secret, options, (err, token) => {
             if (err) throw new Error(err.message || "undefined err: getToken");
             else resolve(token);
         });
     })
 }
 
-function setCookieTokens (res, accessToken, refreshToken) {
-    res.cookie('accessToken', accessToken, { httpOnly: true });
-    res.cookie('refreshToken', refreshToken, { httpOnly: true });
-}
 
-async function updatePairTokens (user, res) {
-    setCookieTokens(res, await getToken(user), await getToken(user, "refresh"));
-    res.sendStatus(204);
+async function returnPairTokens (userID, res) {
+    const accessToken = await getToken(userID);
+    const refreshToken = await getToken(userID, "refresh");
+
+    users.setToken(userID, refreshToken);
+
+    res.json({
+        accessToken,
+        refreshToken,
+    });
 }
 
 module.exports = {
     init (app) {
         app.post("/signin", (req, res) => {
-            const user = users.getUser(req.body);
-            updatePairTokens(user, res);
+            users.getUser(req.body, (err, userID) => {
+                if (!err) returnPairTokens(userID, res);
+                else res.status(403).json(err);
+            });
         });
         app.post("/signin/new_token", (req, res) => {
-            jwt.verify(req.cookies.refreshToken, REFRESH_SECRET, (err, authData) => {
+            jwt.verify(req.body.refreshToken, REFRESH_SECRET, (err, { userID }) => {
                 if (err) res.sendStatus(403);
-                else updatePairTokens(authData.user, res);
+                else if (!users.checkToken(userID, req.body.refreshToken)) res.sendStatus(403);
+                else returnPairTokens(userID, res);
             })
         });
         app.post("/signup", (req, res) => {
-            users.register(req.body, res);
+            users.register(req.body, (err, userID) => {
+                if (err) res.sendStatus(403);
+                else returnPairTokens(userID, res);
+            });
         });
 
         // возвращает id пользователя;
         app.get("/info", verifyToken, (req, res) => {
-            res.json(req.authData.user.id)
+            res.json(req.authData.userID)
         });
         app.get("/logout", verifyToken, (req, res) => {
-            updatePairTokens({ id: null }, res);
+            //TODO: нужно деактивация access token'а
+
+            users.removeToken(req.authData.userID); // refresh token контролируем
+            returnPairTokens({ id: null }, res);
         });
 
         return app;

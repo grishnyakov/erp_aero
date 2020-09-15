@@ -5,16 +5,34 @@ Content-Type: application/json
     "id": "1005",
     "password": "123"
 }
-
 ###
+
+
+POST http://localhost:8000/signup
+Content-Type: application/json
+
+{
+    "id": "1006",
+    "password": "123"
+}
+###
+
+
 GET http://localhost:8000/info
+Cookie: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySUQiOiIxMDA1IiwiaWF0IjoxNjAwMTY5ODI0LCJleHAiOjE2MDAxNjk4NTR9.dcesQtxEm4ALWzdRyFYwmd8JvFSQ3PvfdZbS2leXEHw
 ###
 
 POST http://localhost:8000/signin/new_token
+Content-Type: application/json
+
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiMTAwNSJ9LCJleHBpcmVzSW4iOiIzMCBkYXlzIiwiaWF0IjoxNjAwMTY3OTgwfQ.fu1KEIp05p4pPLTNgwc-y1R2LrLbJ79UJEPfkpRcC9c"
+}
 ###
 
 
 GET  http://localhost:8000/logout
+Cookie: accessToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImlkIjoiMTAwNSJ9LCJleHBpcmVzSW4iOiIxMG0iLCJpYXQiOjE2MDAxNTc0ODV9.NI1OYwZ8hXnubOZPL8XWIH0BchQOfCz74f7iJ8mTjkA
 ###
 
 

@@ -1,0 +1,40 @@
+<html>
+
+<body>
+
+  <form ref='uploadForm' id='uploadForm' action='http://localhost:8000/file/upload' method='post'
+    encType="multipart/form-data">
+    <input type="file" name="sampleFile" />
+    <input type='submit' value='Upload!' />
+  </form>
+
+
+  <button onclick="fetch(`http://localhost:8000/file/delete/facet_views.py`, {method: 'DELETE'} )">DELETE file:
+    facet_views.py </button>
+
+
+  <iframe id="my_iframe" style="display:none;"></iframe>
+  <button onclick=" document.getElementById('my_iframe').src = 'http://localhost:8000/file/download/facet_views.py';">
+    GET file: facet_views.py </button>
+  <br>
+
+
+  <form ref='uploadUpdateForm' onsubmit="event.preventDefault(); updateFile(event);"  encType="multipart/form-data">
+    <input type="file" id="newFile" name="sampleFile" />
+    <input type='submit' value='Update!' />
+  </form>
+</body>
+
+<script>
+  function updateFile(e) {
+
+    let newFile = document.getElementById("newFile").files[0];
+    let formData = new FormData();
+
+    formData.append("sampleFile", newFile);
+    fetch('/file/update/facet_views.py', { method: "PUT", body: formData });
+
+  }
+</script>
+
+</html>
