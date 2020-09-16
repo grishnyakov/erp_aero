@@ -16,10 +16,12 @@ function saveFile (req, res) {
     const fileName = req.params.id || sampleFile.name;
 
     sampleFile.mv(path.join(fileFolder, fileName), function (err) {
-        if (err)
-            return res.status(500).send(err);
+        if (err) res.status(500).send(err);
+        else {
+            // INSERT INTO files_table VALUES ...
+            res.send('File uploaded!');
+        }
 
-        res.send('File uploaded!');
     });
 }
 
@@ -35,13 +37,15 @@ module.exports = function (app) {
     }));
     app.post("/file/upload", (req, res) => {
         saveFile(req, res);
+
     });
     app.put("/file/update/:id", (req, res) => {
         saveFile(req, res);
+        // UPDATE  files_table SET  ...  WHERE file_id = req.paramsid
     });
     app.delete("/file/delete/:id", (req, res) => {
         const fullPath = path.join(fileFolder, req.params.id)
-
+        // DELETE FROM  files_table WHERE file_id = req.paramsid
         fs.unlinkSync(fullPath);
         res.sendStatus(204)
     });
@@ -56,10 +60,12 @@ module.exports = function (app) {
     // TODO: нужны запросы в бд - рутинная работа, не буду тратить время
     app.get("/file/:id", (req, res) => {
         res.send("test");
+        // SELECT * FROM files_table WHERE file_id = req.paramsid
     });
     app.get("/file/list", (req, res) => {
         // TODO: запрос в БД на список файлов,
         res.send("test")
+        // SELECT * FROM files_table с последующийм преобразованием в человеческий вид
     });
     return app;
 }
