@@ -1,10 +1,6 @@
 const db = require("./database");
 const bcrypt = require("bcryptjs");
 
-const uTokens = {
-    // userID: refreshToken 
-}
-
 module.exports = {
     getUser: function (params, callback) {
         callback(null, params.id)
@@ -32,17 +28,4 @@ module.exports = {
         // })
 
     },
-
-    isAuthorized: function (userID, token) {
-        return !!uTokens[userID];
-    },
-    checkToken: function (userID, token) {
-        return uTokens[userID] === token;
-    },
-    setToken: function (userID, token) {
-        uTokens[userID] = token;
-    },
-    removeToken: function (userID) {
-        delete uTokens[userID];
-    }
 }

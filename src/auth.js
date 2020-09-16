@@ -16,7 +16,6 @@ function verifyToken (req, res, next) {
             }
             else {
                 if (authData.userID === null) res.sendStatus(403); // anonimus
-                else if (!users.isAuthorized(authData.userID)) res.sendStatus(403); // anonimus
                 else {
                     req.authData = authData;
                     next()
@@ -44,8 +43,6 @@ async function returnPairTokens (userID, res) {
     const accessToken = await getToken(userID);
     const refreshToken = await getToken(userID, "refresh");
 
-    users.setToken(userID, refreshToken);
-
     res.json({
         accessToken,
         refreshToken,
@@ -63,7 +60,6 @@ module.exports = {
         app.post("/signin/new_token", (req, res) => {
             jwt.verify(req.body.refreshToken, REFRESH_SECRET, (err, { userID }) => {
                 if (err) res.sendStatus(403);
-                else if (!users.checkToken(userID, req.body.refreshToken)) res.sendStatus(403);
                 else returnPairTokens(userID, res);
             })
         });
@@ -79,9 +75,8 @@ module.exports = {
             res.json(req.authData.userID)
         });
         app.get("/logout", verifyToken, (req, res) => {
-            //TODO: нужно деактивация access token'а
-
-            users.removeToken(req.authData.userID); // refresh token контролируем
+            // TODO: нужна деактивация токенов
+            // нет идей как быстро реализовать отзыв токенов, метод черного списка довольно много времени займет 
             returnPairTokens({ id: null }, res);
         });
 
