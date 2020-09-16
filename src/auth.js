@@ -1,86 +1,44 @@
-const jwt = require("jsonwebtoken");
 const users = require("./users");
-
-const ACCESS_SECRET = "b32b7%#_erp-aero-DD";
-const REFRESH_SECRET = "e8n(*&^nfdn_f6SA"
-
-
-function verifyToken (req, res, next) {
-
-    if (!req.cookies.accessToken) res.sendStatus(403);
-    else {
-        jwt.verify(req.cookies.accessToken, ACCESS_SECRET, (err, authData) => {
-            if (err) {
-                if (err.name === "TokenExpiredError") res.status(403).send(err.message); // TODO: автоматически продлевать
-                else res.sendStatus(403);
-            }
-            else {
-                if (authData.userID === null) res.sendStatus(403); // anonimus
-                else {
-                    req.authData = authData;
-                    next()
-                }
-            }
-        });
-    }
-}
-
-function getToken (userID, type = "access",) {
-    const isRefreshToken = type === "refresh";
-    const options = { expiresIn: isRefreshToken ? "30 days" : "30s" };
-    const secret = isRefreshToken ? REFRESH_SECRET : ACCESS_SECRET;
-
-    return new Promise((resolve) => {
-        jwt.sign({ userID }, secret, options, (err, token) => {
-            if (err) throw new Error(err.message || "undefined err: getToken");
-            else resolve(token);
-        });
-    })
-}
-
-
-async function returnPairTokens (userID, res) {
-    const accessToken = await getToken(userID);
-    const refreshToken = await getToken(userID, "refresh");
-
-    res.json({
-        accessToken,
-        refreshToken,
-    });
-}
+const tokens = require("./tokens");
 
 module.exports = {
     init (app) {
         app.post("/signin", (req, res) => {
             users.getUser(req.body, (err, userID) => {
-                if (!err) returnPairTokens(userID, res);
+                if (!err) tokens.returnPairTokens(userID, res);
                 else res.status(403).json(err);
             });
         });
         app.post("/signin/new_token", (req, res) => {
-            jwt.verify(req.body.refreshToken, REFRESH_SECRET, (err, { userID }) => {
-                if (err) res.sendStatus(403);
-                else returnPairTokens(userID, res);
+            tokens.verifyRefreshToken(req.body.refreshToken, (err, authData) => {
+                if (err) res.sendStatus(err.code || 403);
+                else {
+                    tokens.revokeRefreshToken(req.body.refreshToken);
+                    tokens.returnPairTokens(authData.userID, res);
+                }
             })
         });
         app.post("/signup", (req, res) => {
             users.register(req.body, (err, userID) => {
                 if (err) res.sendStatus(403);
-                else returnPairTokens(userID, res);
+                else tokens.returnPairTokens(userID, res);
             });
         });
 
         // возвращает id пользователя;
-        app.get("/info", verifyToken, (req, res) => {
+        app.get("/info", tokens.verifyToken, (req, res) => {
             res.json(req.authData.userID)
         });
-        app.get("/logout", verifyToken, (req, res) => {
-            // TODO: нужна деактивация токенов
-            // нет идей как быстро реализовать отзыв токенов, метод черного списка довольно много времени займет 
-            returnPairTokens({ id: null }, res);
+        app.get("/logout", tokens.verifyToken, (req, res) => {
+            tokens.verifyRefreshToken(req.cookies.refreshToken, (err, authData) => {
+                if (err) res.sendStatus(err.code || 403);
+                else {
+                    tokens.revokeRefreshToken(req.cookies.refreshToken); // в GET запросе нет тела, поэтому помещаем в куки refreshToken 
+                    tokens.returnPairTokens({ id: null }, res);
+                }
+            })
         });
 
         return app;
     },
-    verifyToken
 }

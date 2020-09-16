@@ -1,8 +1,8 @@
-const { verifyToken } = require("./auth")
+const { verifyToken } = require("./tokens")
 const fileUpload = require('express-fileupload');
 const path = require("path");
 const fs = require('fs');
-
+// const helmet = require("helmet"); // TODO настроить безопасность
 const db = require("./database");
 
 const fileFolder = path.join(__dirname, '../files');
